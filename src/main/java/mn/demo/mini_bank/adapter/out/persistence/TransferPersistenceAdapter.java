@@ -78,20 +78,17 @@ public class TransferPersistenceAdapter implements TransferRepositoryPort {
                         cb.equal(root.get("toAccountId"), accountFilterId)
                     ));
                 }
-
-
-if (currency != null) {
-    conditions.add(
-        cb.equal(
-            cb.coalesce(
-                root.<String>get("requestedCurrency"),
-                root.<String>get("currency")
-            ),
-            currency
-        )
-    );
-}
-
+                if (currency != null) {
+                    conditions.add(
+                        cb.equal(
+                            cb.coalesce(
+                                root.<String>get("requestedCurrency"),
+                                root.<String>get("currency")
+                            ),
+                            currency
+                        )
+                    );
+                }
 
                 if (keyword != null) {
                     String pattern = "%" +

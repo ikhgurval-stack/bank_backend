@@ -18,14 +18,12 @@ public class CurrencyConversionService {
             BigDecimal amount,
             String currency) {
 
-        // 1. Validate requested amount
         if (amount == null ||
                 amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException(
                     "Amount must be greater than zero");
         }
 
-        // 2. Validate input currency and decimal places
         BigDecimal rate;
 
         if ("MNT".equals(currency)) {
@@ -51,18 +49,17 @@ public class CurrencyConversionService {
                     "Only MNT and USD are supported");
         }
 
-        // 3. Check requested amount against database precision
+        // Check requested amount against database precision.
         if (amount.compareTo(MAX_AMOUNT) > 0) {
             throw new IllegalArgumentException(
                     "Amount exceeds the allowed limit");
         }
 
-        // 4. Convert to MNT
         BigDecimal settlementAmount = amount
                 .multiply(rate)
                 .setScale(2, RoundingMode.UNNECESSARY);
 
-        // 5. Check converted amount against database precision
+        // Conversion can exceed database precision even when the input fits.
         if (settlementAmount.compareTo(MAX_AMOUNT) > 0) {
             throw new IllegalArgumentException(
                     "Converted amount exceeds the allowed limit");

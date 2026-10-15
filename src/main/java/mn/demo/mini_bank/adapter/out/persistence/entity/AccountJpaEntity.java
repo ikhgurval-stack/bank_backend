@@ -49,33 +49,31 @@ public class AccountJpaEntity {
     public String getAccountNumber() {
         return accountNumber;
     }
-    
-public UUID getId() {
-    return id;
-}
 
-public UUID getUserId() {
-    return userId;
-}
-
-public BigDecimal getBalance() {
-    return balance;
-}
-
-public String getCurrency() {
-    return currency;
-}
-
-public String getStatus() {
-    return status;
-}
-
-public void changeBalance(BigDecimal newBalance) {
-    if (newBalance.signum() < 0) {
-        throw new IllegalArgumentException("Negative balance");
+    public UUID getId() {
+        return id;
     }
-    this.balance = newBalance;
-}
 
+    public UUID getUserId() {
+        return userId;
+    }
 
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void changeBalance(BigDecimal newBalance) {
+        if (newBalance.signum() < 0) {
+            throw new IllegalArgumentException("Negative balance");
+        }
+        this.balance = newBalance;
+    }
 }

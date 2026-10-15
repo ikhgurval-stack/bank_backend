@@ -170,7 +170,7 @@ public class TransferController {
 
     @ExceptionHandler(NoSuchElementException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> notFound(Exception ex) {
+    public Map<String, String> notFound() {
         return Map.of(
                 "error", "Transfer not found");
     }
@@ -180,7 +180,7 @@ public class TransferController {
         DataIntegrityViolationException.class
     })
     @ResponseStatus(HttpStatus.CONFLICT)
-    public Map<String, String> conflict(Exception ex) {
+    public Map<String, String> conflict() {
         return Map.of(
                 "error", "Transfer conflict");
     }

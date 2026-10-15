@@ -8,8 +8,11 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import mn.demo.mini_bank.application.port.out.*;
-import mn.demo.mini_bank.domain.model.*;
+import mn.demo.mini_bank.application.port.out.AccountRepositoryPort;
+import mn.demo.mini_bank.application.port.out.TransferRepositoryPort;
+import mn.demo.mini_bank.application.port.out.UserRepositoryPort;
+import mn.demo.mini_bank.domain.model.Account;
+import mn.demo.mini_bank.domain.model.Transfer;
 
 @Service
 public class TransferService {
@@ -41,7 +44,6 @@ public class TransferService {
             String description,
             UUID key) {
 
-        // 1. Validate basic request fields.
         if (key == null) {
             throw new IllegalArgumentException(
                     "Idempotency key is required");
@@ -62,7 +64,6 @@ public class TransferService {
 
         String note = description.trim();
 
-        // 2. Convert requested currency to MNT.
         var conversion = conversionService.convert(
                 amount, currency);
 
@@ -72,13 +73,11 @@ public class TransferService {
         String settlementCurrency =
                 conversion.settlementCurrency();
 
-        // 3. Find authenticated user.
         UUID userId = users.findByUsername(username)
                 .orElseThrow(() ->
                     new IllegalStateException("User not found"))
                 .id();
 
-        // 4. Find source and destination accounts.
         Account source = accounts
                 .findByAccountNumber(fromNumber)
                 .orElseThrow(() ->
@@ -91,13 +90,13 @@ public class TransferService {
                     new IllegalArgumentException(
                         "Recipient account not found"));
 
-        // 5. Only the owner can transfer from an account.
+        // Only the owner can transfer from an account.
         if (!source.userId().equals(userId)) {
             throw new AccessDeniedException(
                     "Not your account");
         }
 
-        // 6. Lock both accounts in a consistent order.
+        // Consistent lock ordering prevents deadlocks between opposite transfers.
         UUID firstId =
                 source.id().compareTo(destination.id()) < 0
                     ? source.id()
@@ -123,7 +122,7 @@ public class TransferService {
         Account to = first.id().equals(source.id())
                 ? second : first;
 
-        // 7. Check idempotency before modifying balances.
+        // Check idempotency under the account locks before modifying balances.
         var previous = transfers.findByUserAndKey(
                 userId, key);
 
@@ -147,7 +146,6 @@ public class TransferService {
             return saved;
         }
 
-        // 8. Verify both accounts are active.
         if (!"ACTIVE".equals(from.status())
                 || !"ACTIVE".equals(to.status())) {
             throw new IllegalStateException(
@@ -161,13 +159,13 @@ public class TransferService {
                     "Account currency mismatch");
         }
 
-        // 9. Check MNT balance after currency conversion.
+        // Check MNT balance after currency conversion.
         if (from.balance().compareTo(settlementAmount) < 0) {
             throw new IllegalStateException(
                     "Insufficient funds");
         }
 
-        // 10. Atomic debit and credit in MNT.
+        // Debit, credit and transfer persistence share the transaction.
         accounts.updateBalance(
                 from.id(),
                 from.balance().subtract(settlementAmount));
@@ -176,7 +174,7 @@ public class TransferService {
                 to.id(),
                 to.balance().add(settlementAmount));
 
-        // 11. Save both requested and settled amounts.
+        // Save both requested and settled amounts.
         Transfer transfer = new Transfer(
                 UUID.randomUUID(),
                 userId,

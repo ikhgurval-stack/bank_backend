@@ -3,6 +3,7 @@ package mn.demo.mini_bank.adapter.out.persistence;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
@@ -12,8 +13,6 @@ import mn.demo.mini_bank.domain.model.Account;
 import mn.demo.mini_bank.application.port.out.AccountRepositoryPort;
 import mn.demo.mini_bank.adapter.out.persistence.entity.AccountJpaEntity;
 import mn.demo.mini_bank.adapter.out.persistence.repository.AccountJpaRepository;
-
-import java.util.Set;
 
 @Repository
 public class AccountPersistenceAdapter implements AccountRepositoryPort {
@@ -79,13 +78,13 @@ public class AccountPersistenceAdapter implements AccountRepositoryPort {
             entity.getStatus()
         );
     }
-    
-@Override
-public List<Account> findByIds(Set<UUID> ids) {
-    return repository.findAllById(ids)
-            .stream()
-            .map(this::toDomain)
-            .toList();
-}
+
+    @Override
+    public List<Account> findByIds(Set<UUID> ids) {
+        return repository.findAllById(ids)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
 
 }
